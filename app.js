@@ -12,10 +12,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors"
 
 import {connection} from "./database/dbConnection.js"
-import { errorMiddleware } from "./middlewares/error.js";
-
 import userRouter from "./routes/userRouter.js"
-
 import passport from "passport";
 import './config/passport-jwt-strategy.js'; 
 
@@ -38,4 +35,3 @@ app.use(passport.initialize())
 
 app.use("/api/user", userRouter)
 connection();
-app.use(errorMiddleware)

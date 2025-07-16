@@ -2,31 +2,13 @@
 import { z } from "zod";
 
 export const registerUserSchema = z.object({
-//   name: z
-//     .string()
-//     .min(3, "Name must be at least 3 characters")
-//     .max(50, "Name must not exceed 50 characters"),
 
-//   email: z.string().email("Invalid email address"),
-
-//   phone: z
-//     .string()
-//     .regex(/^\+?\d{10,15}$/, "Invalid mobile number"),
-
-//   password: z
-//     .string()
-//     .min(8, "Password must be at least 8 characters")
-//     .max(32, "Password must be less than 32 characters"),
-//      verificationMethod: z.enum(["email", "phone"], {
-//     required_error: "Verification method is required",
-//   }),
-// });
   name: z
     .string()
     .min(3, "Name must be at least 3 characters")
     .max(50, "Name must not exceed 50 characters"),
 
-  email: z.string().email("Invalid email address"),
+  email: z.string().email(), // Removed deprecated overload
 
   phone: z
     .string()
@@ -37,7 +19,6 @@ export const registerUserSchema = z.object({
     .min(8, "Password must be at least 8 characters")
     .max(32, "Password must be less than 32 characters"),
 });
-
 export const LoginFormSchema = z.object({
   phone: z
     .string({
@@ -83,4 +64,28 @@ export const forgotPasswordOtpSchema = z.object({
     .min(10, "Phone number must be at least 10 digits")
     .max(15, "Phone number must not exceed 15 digits")
     .regex(/^\+?\d{10,15}$/, "Invalid phone number format")
+});
+
+export const verifyForgotPasswordOtpSchema = z.object({
+  phone: z
+    .string({ required_error: "Phone number is required" })
+    .regex(/^\+\d{10,15}$/, "Phone number must be in E.164 format (e.g., +919876543210)"),
+
+  otp: z
+    .string({ required_error: "OTP is required" })
+    .length(6, "OTP must be 6 digits"),
+
+  newPassword: z
+    .string({ required_error: "New password is required" })
+    .min(8, "Password must be at least 8 characters long")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&_])[A-Za-z\d@$!%*?#&_]{8,}$/,
+      "Password must include uppercase, lowercase, number, and special character"
+    ),
+
+  confirmPassword: z
+    .string({ required_error: "Confirm password is required" }),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  path: ['confirmPassword'],
+  message: "New password and confirm password do not match",
 });

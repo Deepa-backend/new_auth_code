@@ -1,7 +1,5 @@
  import { config } from "dotenv";
 config();
-import Errorhandler from "../middlewares/error.js";
-import { catchAsyncError } from "../middlewares/catchAsyncError.js";
 import { User } from "../models/userModel.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import sendResponse from "../utils/sendResponse.js";
@@ -28,136 +26,7 @@ if (!TWILIO_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
 
 const client = twilio(TWILIO_SID, TWILIO_AUTH_TOKEN);
 
-// ======================================
-// ✅ REGISTER CONTROLLER
-// ======================================
-// export const register = catchAsyncError(async (req, res, next) => {
-//   const { name, email, phone, password, verificationMethod } = req.body;
 
-//   console.log("📥 Registration input:", { name, email, phone, password, verificationMethod });
-
-//   if (!name || !email || !phone || !password || !verificationMethod) {
-//     return sendResponse(res, "All fields are required", 400, false);
-//   }
-
-//   const existingUser = await User.findOne({
-//     $or: [{ email }, { phone }],
-//     accountVerified: true,
-//   });
-
-//   if (existingUser) {
-//     return sendResponse(res, "User already exists", 400, false);
-//   }
-
-//    const salt = await bcrypt.genSalt(Number(process.env.SALT));
-//    const hashedPassword = await bcrypt.hash(password, salt);
-//   const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
-//   const expireTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-//   await TempUser.create({
-//     name,
-//     email,
-//     phone,
-//     password :hashedPassword,
-//     verificationCode: otp,
-//     verificationCodeExpire: expireTime,
-//   });
-
-//   console.log("🕒 OTP generated:", otp);
-  
-
-// console.log("✅ TempUser saved to DB:", TempUser);
-//   await sendVerificationCode(verificationMethod, otp, name, email, phone, res);
-// });
-
-
-
-// async function sendVerificationCode(method, code, name, email, phone, res) {
-//   try {
-//     if (method === "email") {
-//       const message = generateEmailTemplate(code, name);
-//       await sendEmail({
-//         email,
-//         subject: "Your verification code",
-//         message,
-//       });
-
-//       return res.status(200).json({
-//         success: true,
-//         message: `Verification email sent to ${name}`,
-//       });
-//     }
-
-//     if (method === "phone") {
-//       const formattedPhone = phone.startsWith("+") ? phone : `+91${phone}`;
-
-//       await client.messages.create({
-//         body: `Your verification code is ${code}`,
-//         from: TWILIO_PHONE_NUMBER,
-//         to: formattedPhone,
-//       });
-
-//       return res.status(200).json({
-//         success: true,
-//         message: "OTP sent successfully via SMS",
-//       });
-//     }
-
-//     throw new Errorhandler("Invalid verification method", 400);
-//   } catch (error) {
-//     console.error("❌ Error sending verification code:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Verification code failed to send",
-//     });
-//   }
-// }
-
-// // ======================================
-// // ✅ EMAIL TEMPLATE GENERATOR
-// // ======================================
-// function generateEmailTemplate(code, name) {
-//   return `
-//     <!DOCTYPE html>
-//     <html>
-//     <head>
-//       <meta charset="UTF-8">
-//       <title>Email Verification</title>
-//       <style>
-//         body { font-family: Arial, sans-serif; background: #f4f4f4; }
-//         .container {
-//           background: #fff;
-//           margin: 40px auto;
-//           padding: 30px;
-//           border-radius: 10px;
-//           max-width: 600px;
-//           box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-//         }
-//         .otp {
-//           font-size: 24px;
-//           font-weight: bold;
-//           color: #007bff;
-//           text-align: center;
-//           margin: 20px 0;
-//         }
-//       </style>
-//     </head>
-//     <body>
-//       <div class="container">
-//         <h2>Email Verification Code</h2>
-//         <p>Hello ${name},</p>
-//         <p>Please use the following code to verify your account:</p>
-//         <div class="otp">${code}</div>
-//         <p>This code is valid for the next 10 minutes.</p>
-//       </div>
-//     </body>
-//     </html>
-//   `;
-// }
-
-
-
-// ======================================
 export const register = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
@@ -417,7 +286,15 @@ await TempUser.findOneAndUpdate(
 
  console.log (`OTP for $ {phone} : ${otp} ${user.name}`);
 
-}
+
+await client.messages.create({
+      body: `Your password reset OTP is: ${otp}`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: phone,
+    });
+
+    return sendResponse(res, "OTP sent successfully via SMS", 200, true);
+  }
 catch (error)
 {
   console.log (error)
